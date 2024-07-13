@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가난한 농부의 농장디펜서</title>
+    <link href="img/씨앗.png" rel="shortcut icon" type="image/x-icon">
+
+    <style>
+        * { list-style: none; text-decoration: none; float: left; }
+        body { background-color: #333; }
+        /* 시작화면 */
+        #start { width: 1280px; height: 720px; }
+        .startt1 { position: relative; z-index: 2; float: left; margin-top: -700px; margin-left: 230px; }
+        .startt2 { position: relative; z-index: 2; float: left; margin-top: -400px; margin-left: 340px; }
+        .startt3 { position: relative; z-index: 2; float: left; margin-top: -300px; margin-left: 340px; }
+        .startt4 { position: relative; z-index: 2; float: left; margin-top: -50px; }
+
+        /* 게임시작 */
+        .character {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-image: url("img/도둑.png");
+            background-size: cover;
+        }
+
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: #fff; /* 흰색 글자 */
+            z-index: 1000; /* 점수판을 가장 위에 표시 */
+            display: none;
+            background-color: #333;
+            width: 130px;
+            height: 50px;
+        }
+        #kill {
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            font-size: 24px;
+            color: #fff; /* 흰색 글자 */
+            z-index: 1000; /* 점수판을 가장 위에 표시 */
+            display: none;
+            background-color: #333;
+            width: 130px;
+            height: 50px;
+        }
+
+        .gamet1 { display: none; }
+
+        #game { width: 1280px; height: 720px; }
+        #stop { width: 1280px; height: 720px; z-index: 1001; position: absolute; background-color: #7e7b7b; display: none; color: #fff; text-align: center; }
+        #copy{width: 500px; height: 500px; background-color: #fff; z-index: 3; position: absolute; display: none;}
+    </style>
+    <script src="jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div id="copy">
+        <img src="img/저작권.png">
+        <br><br><a>이 게임에 사용된 글꼴은 ONE 모바일 POP과
+            <br>맑은 고딕입니다. 또한 사용된 이미지는 자체 제작하였습니다. 사운드의 경우 
+            <br>Pixabay를 사용하였습니다. 사용된 언어는 HTML, CSS, JS(제이쿼리 3.7.1)을 사용하였습니다.
+        </a>
+    <br><br><br><button class="x">닫기</button>
+    </div>
+    <div id="stop">
+        <h2>Game Over</h2>
+        <div id="final-score"></div> <!-- 최종 점수 표시 -->
+        <br><br><br><br><br><br><br><br><br><br><button>새로고침</button>
+    </div>
+    <div id="start"><!---시작화면 시작-->
+        <img src="img/평지1280720.jpg" alt="시작">
+        <img class="startt1" src="img/제목.png" alt="제목">
+        <img class="startt2" src="img/게임시작.png" alt="게임시작">
+        <img class="startt3" src="img/저작권.png" alt="저작권">
+        <a class="startt4">2024년 7월 14일 ver1.0</a>
+    </div><!---시작화면 끝-->
+    <div id="game"><!---게임화면-->
+        <img class="gamet1" src="img/평지1280720.jpg" alt="시작">
+        <div id="scoreboard">Score: 0</div> <!-- 점수판 -->
+        <div id="kill">Kill: 0</div><!---목숨-->
+        <div class="character"></div><!---캐릭터 생성-->
+    </div><!---게임화면 끝-->
+    <script>// 자바스크립트 시작
+$(document).ready(function () {
+    let score = 0; // 초기 점수 설정
+    let kill = 0; // 초기 킬 수 설정
+    let characterInterval; // 캐릭터 생성 간격 타이머 ID
+
+    function updateScore() {
+        $('#scoreboard').text('Score: ' + score); // 점수판 업데이트
+    }
+
+    function updateKill() {
+    $('#kill').text('Kill: ' + kill); // 킬 수 업데이트
+    var audio = new Audio("gameover.mp3");
+    audio.volume = 0.3; // 음량을 30%로 설정 (0.0 ~ 1.0)
+    audio.play().catch(error => {
+        console.error("Audio play failed:", error);
+    });
+
+    if (kill >= 5) {
+        $('.character').remove(); // 현재 화면에 있는 모든 캐릭터 삭제
+        clearInterval(characterInterval); // 캐릭터 생성 간격 타이머 중지
+        $('#final-score').html('최종 점수: ' + score + '<br>최종 킬 수: ' + kill); // 최종 점수와 킬 수 표시
+        $("#stop").show();
+        $("button").click(function(){
+            location.reload(true);
+        });
+    }
+}
+
+
+    function createCharacter() {
+        const character = $('<div class="character"></div>'); // 캐릭터 생성
+        const startPosition = Math.random() * ($('#game').width() - 50); // 랜덤한 시작 위치 설정
+        character.css('left', startPosition + 'px'); // 시작 위치 적용
+        $('#game').append(character); // 게임 화면에 캐릭터 추가
+
+        // 캐릭터가 아래로 떨어지는 애니메이션 설정
+        character.animate({ top: '100%' }, 5000, 'linear', function () {
+            // 애니메이션이 끝나면 캐릭터 제거
+            $(this).remove();
+        });
+
+        // 캐릭터 위치 확인을 위한 setInterval 설정
+        const checkInterval = setInterval(function() {
+            // 캐릭터가 화면을 벗어나면
+            if (character.offset().top >= $('#game').offset().top + $('#game').height()) {
+                kill++; // kill 증가
+                updateKill(); // 킬 수 업데이트
+                clearInterval(checkInterval); // setInterval 종료
+            }
+        }, 100); // 0.1초마다 캐릭터 위치 확인
+
+        // 캐릭터 클릭 이벤트 처리
+        character.click(function () {
+            $(this).remove(); // 클릭된 캐릭터 제거
+            score += 10; // 점수 증가
+            updateScore(); // 점수판 업데이트
+            clearInterval(checkInterval); // setInterval 종료
+        });
+    }
+
+    // 게임 시작 버튼 클릭 시 처리
+    $(".startt2").click(function () {
+        $("#start").hide(); // 시작 화면 숨기기
+        $(".gamet1").show(); // 게임 화면 보이기
+        $("#scoreboard").show(); // 점수판 보이기
+        $("#kill").show(); // 킬 수 보이기
+        $(".character").css({
+            'left': '0px',
+            'display': 'block'
+        }); // 캐릭터 초기 설정
+        // 시간 입력을 받는 UI 추가 (예: 입력 상자)
+        let timeInput = prompt("적이 소환될 딜레이초를 입력하십시오. (기본 700(0.7초)):", "700");
+        let intervalTime = parseInt(timeInput) || 700; // 입력값이 유효하지 않으면 기본값 700을 사용
+
+        characterInterval = setInterval(createCharacter, intervalTime); // 입력받은 시간으로 캐릭터 생성 간격 설정
+    });
+
+    $(".character").hide(); // 초기에 캐릭터 숨기기
+});
+
+$(".startt3").click(function(){
+    $("#copy").show()
+})
+$(".x").click(function(){
+    $("#copy").hide()
+})
+    </script><!-- 자바스크립트 끝 -->
+</body>
+</html>
